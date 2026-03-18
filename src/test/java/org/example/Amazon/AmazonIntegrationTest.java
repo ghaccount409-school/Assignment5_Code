@@ -71,6 +71,13 @@ class AmazonIntegrationTest {
 
                 assertThat(amazon.calculate()).isEqualTo(132.5);
             }
+
+            @Test
+            void calculateUsesItemQuantityForRegularCostButRowCountForDelivery() {
+                amazon.addToCart(new Item(ItemType.OTHER, "Bulk pencils", 10, 2.0));
+
+                assertThat(amazon.calculate()).isEqualTo(25.0);
+            }
         }
 
         @Nested
@@ -134,6 +141,9 @@ class AmazonIntegrationTest {
                 assertThat(items).hasSize(2);
                 assertThat(items.get(0).getName()).isEqualTo("A");
                 assertThat(items.get(1).getName()).isEqualTo("B");
+                assertThat(items.get(1).getType()).isEqualTo(ItemType.ELECTRONIC);
+                assertThat(items.get(1).getQuantity()).isEqualTo(2);
+                assertThat(items.get(1).getPricePerUnit()).isEqualTo(2.0);
             }
         }
     }
@@ -182,6 +192,20 @@ class AmazonIntegrationTest {
 
                 amazon.addToCart(new Item(ItemType.OTHER, "Recovered", 1, 2.0));
                 assertThat(shoppingCart.getItems()).hasSize(1);
+            }
+
+            @Test
+            void constructorReusesConnectionWhileOpenAndAllowsUseAfterReopen() {
+                Database first = new Database();
+                Database second = new Database();
+
+                assertThat(second.getConnection()).isSameAs(first.getConnection());
+
+                first.close();
+                Database reopened = new Database();
+
+                Integer value = reopened.withSql(() -> 1);
+                assertThat(value).isEqualTo(1);
             }
 
             @Test

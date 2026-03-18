@@ -85,8 +85,9 @@ class AmazonUnitTest {
                 amazon.calculate();
 
                 verify(cart, times(2)).getItems();
-                inOrder(ruleOne, ruleTwo).verify(ruleOne).priceToAggregate(items);
-                inOrder(ruleOne, ruleTwo).verify(ruleTwo).priceToAggregate(items);
+                var order = inOrder(ruleOne, ruleTwo);
+                order.verify(ruleOne).priceToAggregate(items);
+                order.verify(ruleTwo).priceToAggregate(items);
             }
 
             @Test
@@ -219,6 +220,25 @@ class AmazonUnitTest {
 
                 assertThat(deliveryPrice.priceToAggregate(cart)).isEqualTo(20.0);
             }
+
+            @Test
+            void deliveryPriceReturnsTwelvePointFiveForExactlyTenItems() {
+                DeliveryPrice deliveryPrice = new DeliveryPrice();
+                List<Item> cart = List.of(
+                        new Item(ItemType.OTHER, "1", 1, 1.0),
+                        new Item(ItemType.OTHER, "2", 1, 1.0),
+                        new Item(ItemType.OTHER, "3", 1, 1.0),
+                        new Item(ItemType.OTHER, "4", 1, 1.0),
+                        new Item(ItemType.OTHER, "5", 1, 1.0),
+                        new Item(ItemType.OTHER, "6", 1, 1.0),
+                        new Item(ItemType.OTHER, "7", 1, 1.0),
+                        new Item(ItemType.OTHER, "8", 1, 1.0),
+                        new Item(ItemType.OTHER, "9", 1, 1.0),
+                        new Item(ItemType.OTHER, "10", 1, 1.0)
+                );
+
+                assertThat(deliveryPrice.priceToAggregate(cart)).isEqualTo(12.5);
+            }
         }
 
         @Nested
@@ -294,6 +314,17 @@ class AmazonUnitTest {
                 ExtraCostForElectronics surchargeRule = new ExtraCostForElectronics();
 
                 assertThat(surchargeRule.priceToAggregate(List.of())).isEqualTo(0.0);
+            }
+
+            @Test
+            void returnsSingleSurchargeEvenWithMultipleElectronicItems() {
+                ExtraCostForElectronics surchargeRule = new ExtraCostForElectronics();
+                List<Item> cart = List.of(
+                        new Item(ItemType.ELECTRONIC, "Phone", 1, 500.0),
+                        new Item(ItemType.ELECTRONIC, "Tablet", 1, 350.0)
+                );
+
+                assertThat(surchargeRule.priceToAggregate(cart)).isEqualTo(7.5);
             }
         }
     }
