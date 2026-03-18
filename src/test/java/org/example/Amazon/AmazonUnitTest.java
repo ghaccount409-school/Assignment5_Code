@@ -16,6 +16,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("Amazon project unit tests")
@@ -43,6 +44,14 @@ class AmazonUnitTest {
                 Amazon amazon = new Amazon(cart, List.of(ruleOne, ruleTwo));
 
                 assertThat(amazon.calculate()).isEqualTo(25.0);
+            }
+
+            @Test
+            void calculateReturnsZeroWhenNoRulesConfigured() {
+                ShoppingCart cart = mock(ShoppingCart.class);
+                Amazon amazon = new Amazon(cart, List.of());
+
+                assertThat(amazon.calculate()).isEqualTo(0.0);
             }
 
             @Test
@@ -78,6 +87,16 @@ class AmazonUnitTest {
                 verify(cart, times(2)).getItems();
                 inOrder(ruleOne, ruleTwo).verify(ruleOne).priceToAggregate(items);
                 inOrder(ruleOne, ruleTwo).verify(ruleTwo).priceToAggregate(items);
+            }
+
+            @Test
+            void calculateDoesNotQueryCartWhenNoRulesExist() {
+                ShoppingCart cart = mock(ShoppingCart.class);
+                Amazon amazon = new Amazon(cart, List.of());
+
+                amazon.calculate();
+
+                verifyNoInteractions(cart);
             }
         }
     }

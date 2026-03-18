@@ -11,9 +11,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Amazon integration tests")
 class AmazonIntegrationTest {
@@ -84,6 +86,15 @@ class AmazonIntegrationTest {
 
                 assertThat(amazon.calculate()).isEqualTo(16.5);
             }
+
+            @Test
+            void calculateUsesHighestDeliveryTierForMoreThanTenRows() {
+                for (int i = 1; i <= 11; i++) {
+                    amazon.addToCart(new Item(ItemType.OTHER, "Item " + i, 1, 1.0));
+                }
+
+                assertThat(amazon.calculate()).isEqualTo(31.0);
+            }
         }
     }
 
@@ -144,6 +155,13 @@ class AmazonIntegrationTest {
 
                 assertThat(shoppingCart.getItems()).isEmpty();
             }
+
+            @Test
+            void withSqlReturnsSupplierValue() {
+                String value = database.withSql(() -> "ok");
+
+                assertThat(value).isEqualTo("ok");
+            }
         }
 
         @Nested
@@ -164,6 +182,16 @@ class AmazonIntegrationTest {
 
                 amazon.addToCart(new Item(ItemType.OTHER, "Recovered", 1, 2.0));
                 assertThat(shoppingCart.getItems()).hasSize(1);
+            }
+
+            @Test
+            void withSqlWrapsSqlExceptionAsRuntimeException() {
+                assertThatThrownBy(() -> database.withSql(() -> {
+                    throw new SQLException("boom");
+                }))
+                        .isInstanceOf(RuntimeException.class)
+                        .hasCauseInstanceOf(SQLException.class)
+                        .hasRootCauseMessage("boom");
             }
         }
     }
