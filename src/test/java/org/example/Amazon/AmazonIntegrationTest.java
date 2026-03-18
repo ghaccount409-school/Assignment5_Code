@@ -1,5 +1,10 @@
 package org.example.Amazon;
 
+import java.sql.SQLException;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.example.Amazon.Cost.DeliveryPrice;
 import org.example.Amazon.Cost.ExtraCostForElectronics;
 import org.example.Amazon.Cost.ItemType;
@@ -10,12 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.sql.SQLException;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Amazon integration tests")
 class AmazonIntegrationTest {
@@ -172,6 +171,21 @@ class AmazonIntegrationTest {
 
                 assertThat(value).isEqualTo("ok");
             }
+
+            @Test
+            void withSqlCanQueryPersistedRows() {
+                amazon.addToCart(new Item(ItemType.OTHER, "Desk", 1, 99.0));
+
+                Integer count = database.withSql(() -> {
+                    try (var ps = database.getConnection().prepareStatement("select count(*) from shoppingcart")) {
+                        var rs = ps.executeQuery();
+                        rs.next();
+                        return rs.getInt(1);
+                    }
+                });
+
+                assertThat(count).isEqualTo(1);
+            }
         }
 
         @Nested
@@ -216,6 +230,16 @@ class AmazonIntegrationTest {
                         .isInstanceOf(RuntimeException.class)
                         .hasCauseInstanceOf(SQLException.class)
                         .hasRootCauseMessage("boom");
+            }
+
+            @Test
+            void separateAdaptorInstancesSeeSameStoredRows() {
+                amazon.addToCart(new Item(ItemType.OTHER, "Shared", 1, 3.0));
+
+                ShoppingCartAdaptor secondAdaptor = new ShoppingCartAdaptor(new Database());
+
+                assertThat(secondAdaptor.getItems()).hasSize(1);
+                assertThat(secondAdaptor.getItems().getFirst().getName()).isEqualTo("Shared");
             }
         }
     }

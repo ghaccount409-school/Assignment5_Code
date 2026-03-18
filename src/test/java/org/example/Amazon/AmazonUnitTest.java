@@ -1,5 +1,8 @@
 package org.example.Amazon;
 
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.example.Amazon.Cost.DeliveryPrice;
 import org.example.Amazon.Cost.ExtraCostForElectronics;
 import org.example.Amazon.Cost.ItemType;
@@ -8,10 +11,6 @@ import org.example.Amazon.Cost.RegularCost;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
