@@ -223,6 +223,23 @@ class AmazonIntegrationTest {
             }
 
             @Test
+            void closeCanBeCalledTwiceAndSystemStillRecovers() {
+                database.close();
+                database.close();
+
+                Database reopened = new Database();
+                ShoppingCartAdaptor adaptor = new ShoppingCartAdaptor(reopened);
+                Amazon recoveredAmazon = new Amazon(adaptor, List.of(
+                        new RegularCost(),
+                        new DeliveryPrice(),
+                        new ExtraCostForElectronics()
+                ));
+
+                recoveredAmazon.addToCart(new Item(ItemType.OTHER, "AfterDoubleClose", 1, 5.0));
+                assertThat(adaptor.getItems()).hasSize(1);
+            }
+
+            @Test
             void withSqlWrapsSqlExceptionAsRuntimeException() {
                 assertThatThrownBy(() -> database.withSql(() -> {
                     throw new SQLException("boom");

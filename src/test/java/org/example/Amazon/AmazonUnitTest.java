@@ -98,6 +98,25 @@ class AmazonUnitTest {
 
                 verifyNoInteractions(cart);
             }
+
+            @Test
+            void calculateQueriesCartOncePerRuleWhenThreeRulesConfigured() {
+                ShoppingCart cart = mock(ShoppingCart.class);
+                PriceRule ruleOne = mock(PriceRule.class);
+                PriceRule ruleTwo = mock(PriceRule.class);
+                PriceRule ruleThree = mock(PriceRule.class);
+                List<Item> items = List.of(new Item(ItemType.OTHER, "Book", 1, 10.0));
+
+                when(cart.getItems()).thenReturn(items);
+                when(ruleOne.priceToAggregate(items)).thenReturn(10.0);
+                when(ruleTwo.priceToAggregate(items)).thenReturn(5.0);
+                when(ruleThree.priceToAggregate(items)).thenReturn(7.5);
+
+                Amazon amazon = new Amazon(cart, List.of(ruleOne, ruleTwo, ruleThree));
+
+                assertThat(amazon.calculate()).isEqualTo(22.5);
+                verify(cart, times(3)).getItems();
+            }
         }
     }
 
