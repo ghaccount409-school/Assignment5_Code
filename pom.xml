@@ -43,6 +43,29 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <configLocation>google_checks.xml</configLocation>
+                    <outputFile>${project.build.directory}/checkstyle.xml</outputFile>
+                    <outputFileFormat>xml</outputFileFormat>
+                    <consoleOutput>true</consoleOutput>
+                    <linkXRef>false</linkXRef>
+                    <failOnViolation>false</failOnViolation>
+                    <failsOnError>false</failsOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle-validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>checkstyle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.2</version>
             </plugin>
@@ -59,7 +82,7 @@
                     </execution>
                     <execution>
                         <id>jacoco-report</id>
-                        <phase>test</phase>
+                        <phase>verify</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
